@@ -1,0 +1,17 @@
+c_load:
+  GenericErrorMsg: |-
+    Koodin lataaminen kirjastona epäonnistui.
+    Lisätietoja: {emsg}
+  OSError: |-
+    {emsg}
+  NoStdIO: |-
+    Koodista puuttui stdio-kirjaston include, jota tarvitaan tulostukseen ja syötteiden lukemiseen.
+  LoadingLibrary: |-
+    Ladataan kooditiedosto {name} kirjastona testattavaksi...
+  CompileError: |-
+    Kooditiedostoa ei voitu kääntää.
+  EncodingError: |-
+    Kooditiedostoa ei voitu lukea UTF-8 koodauksella.
+  InvalidPrototype: |-
+    Yksi tai useampi funktion prototyyppi sisälsi virheitä. Tarkistinjärjestelmä asettaa prototyypeille joitain rajoituksia.
+

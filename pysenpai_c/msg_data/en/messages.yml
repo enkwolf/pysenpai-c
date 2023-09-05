@@ -1,0 +1,16 @@
+c_load:
+  GenericErrorMsg: |-
+    Failed to load the code as a library.
+    Information: {emsg}
+  OSError: |-
+    {emsg}
+  NoStdIO: |-
+    Your code is missing an include for stdio which is needed for printing and reading input.
+  LoadingLibrary: |-
+    Loading source code file {name} as a library for testing...
+  CompileError: |-
+    Unable to compile the source file.
+  EncodingError: |-
+    Unable to read the code file as UTF-8.
+  InvalidPrototype: |-
+    One ore more prototypes contained errors. The checking system places certain additional limits for prototypes.
