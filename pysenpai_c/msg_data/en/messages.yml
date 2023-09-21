@@ -6,6 +6,7 @@ c_load:
     {emsg}
   NoStdIO: |-
     Your code is missing an include for stdio which is needed for printing and reading input.
+    Alternatively it is included but not used in which case the compiler optimizes it out.
   LoadingLibrary: |-
     Loading source code file {name} as a library for testing...
   CompileError: |-

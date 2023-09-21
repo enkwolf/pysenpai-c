@@ -1,54 +1,21 @@
 import os
+import re
+import sys
 import cffi
 from pysenpai.messages import load_messages, Codes
 from pysenpai.output import json_output, output
+from pysenpai_c.utils.internal import find_prototypes
 
-
-proto_pat = re.compile("(?:[A-Za-z0-9_]+\s+)+[A-Za-z0-9_]+\s*\((?:[A-Za-z0-9_\* ]+,?)*\)\s*;")
-cdata_pat = re.compile("<cdata '(?P<type>[A-Za-z0-9_ \*]+)' owning (?P<bytes>[0-9]+) bytes>")
 
 ffi = cffi.FFI()
 
 
-def find_prototypes(content):
-    """
-    find_prototypes(content) -> list
-
-    This function locates function prototypes from a .c file. These are needed
-    for defining the functions within CFFI. It's a work in progress and at its
-    present stage can sometimes fail to find prototypes even if they are
-    there. The function is not used for .h files.
-    """
-
-
-    protos = []
-    comment = False
-    has_stdio = False
-    for line in content:
-        #if line.strip().endswith("{") and not line.strip().startswith("struct"):
-        #    break
-        line = line.strip()
-        if "<stdio.h>" in line:
-            has_stdio = True
-
-        if "/*" in line:
-            if "*/" not in line:
-                comment = True
-        if comment and "*/" in line:
-            comment = False
-
-        if not comment:
-            line = line.split("//")[0].split("/*")[0].strip()
-            if line.endswith(";") and not line.startswith("return"):
-                if proto_pat.match(line):
-                    protos.append(line)
-    return protos, has_stdio
 
 
 
 def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_stdio=False):
     lib_name, ext = os.path.splitext(st_c_filename)
-    msgs = load_messages(lang, "c_load")
+    msgs = load_messages(lang, "c_load", "pysenpai_c")
     msgs.update(custom_msgs)
 
     json_output.new_test(msgs.get_msg("LoadingLibrary", lang)["content"].format(name=st_c_filename))
@@ -75,7 +42,7 @@ def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_
 
             ffi.cdef("\n".join(protos))
     except UnicodeDecodeError:
-        output(msgs.get_msg("EncodingError", lang), ERROR)
+        output(msgs.get_msg("EncodingError", lang), Codes.ERROR)
         return None
 
 
@@ -90,7 +57,7 @@ def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_
             st_lib = ffi.verify(source.read())
         except:
             os.dup2(orig_stderr.fileno(), sys.stderr.fileno())
-            output(msgs.get_msg("CompileError", lang), ERROR)
+            output(msgs.get_msg("CompileError", lang), Codes.ERROR)
             with open("err", "r") as f:
                 print(f.read())
             return None
@@ -101,7 +68,7 @@ def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_
         try:
             st_lib.setbuf(st_lib.stdout, ffi.NULL)
         except AttributeError:
-            output(msgs.get_msg("NoStdIO", lang), ERROR)
+            output(msgs.get_msg("NoStdIO", lang), Codes.ERROR)
             return None
 
     return st_lib
@@ -139,7 +106,7 @@ def load_library(st_c_filename, so_name, lang="en", custom_msgs={}, typedefs={},
 
     lib_name, ext = os.path.splitext(st_c_filename)
     so_name = so_name.get(lang, so_name["en"])
-    msgs = load_messages(lang, "c_load")
+    msgs = load_messages(lang, "c_load", "pysenpai_c")
     msgs.update(custom_msgs)
 
     json_output.new_test(msgs.get_msg("LoadingLibrary", lang)["content"].format(name=st_c_filename))
@@ -154,7 +121,7 @@ def load_library(st_c_filename, so_name, lang="en", custom_msgs={}, typedefs={},
         etype, evalue, etrace = sys.exc_info()
         ename = evalue.__class__.__name__
         emsg = str(evalue)
-        output(msgs.get_msg(ename, lang, default="GenericErrorMsg"), ERROR, ename=ename, emsg=emsg)
+        output(msgs.get_msg(ename, lang, default="GenericErrorMsg"), Codes.ERROR, ename=ename, emsg=emsg)
         return None
 
     if typedefs:
@@ -170,13 +137,12 @@ def load_library(st_c_filename, so_name, lang="en", custom_msgs={}, typedefs={},
         with open(headers, encoding="utf-8-sig") as source:
             contents = source.readlines()
             protos, has_stdio = find_prototypes(contents)
-
             ffi.cdef("\n".join(protos))
     except UnicodeDecodeError:
-        output(msgs.get_msg("EncodingError", lang), ERROR)
+        output(msgs.get_msg("EncodingError", lang), Codes.ERROR)
         return None
     except cffi.api.CDefError:
-        output(msgs.get_msg("InvalidPrototype", lang), ERROR)
+        output(msgs.get_msg("InvalidPrototype", lang), Codes.ERROR)
         return None
 
 
@@ -190,7 +156,7 @@ def load_library(st_c_filename, so_name, lang="en", custom_msgs={}, typedefs={},
             ffi.cdef("void setbuf(FILE *stream, char *buf);")
             st_lib.setbuf(st_lib.stdout, ffi.NULL)
         except AttributeError:
-            output(msgs.get_msg("NoStdIO", lang), ERROR)
+            output(msgs.get_msg("NoStdIO", lang), Codes.ERROR)
             return None
 
     return st_lib

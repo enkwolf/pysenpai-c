@@ -1,3 +1,4 @@
+import random
 
 def gen_random_binary(bits):
     """
@@ -9,3 +10,4 @@ def gen_random_binary(bits):
 
     i = random.randint(0, 2 ** bits - 1)
     return bin(i)[2:].rjust(bits, "0")
+

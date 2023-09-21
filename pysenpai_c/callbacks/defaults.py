@@ -1,3 +1,5 @@
+cdata_pat = re.compile("<cdata '(?P<type>[A-Za-z0-9_ \*]+)' owning (?P<bytes>[0-9]+) bytes>")
+
 def default_c_presenter(value):
     """
     default_c_presenter(value) -> str

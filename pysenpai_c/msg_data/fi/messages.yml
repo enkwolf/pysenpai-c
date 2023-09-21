@@ -6,6 +6,7 @@ c_load:
     {emsg}
   NoStdIO: |-
     Koodista puuttui stdio-kirjaston include, jota tarvitaan tulostukseen ja syötteiden lukemiseen.
+    Vaihtoehtoisesti include oli koodissa, mutta sitä ei koskaan käytetä, jolloin kääntäjä optimoi sen pois.
   LoadingLibrary: |-
     Ladataan kooditiedosto {name} kirjastona testattavaksi...
   CompileError: |-

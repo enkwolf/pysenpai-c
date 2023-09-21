@@ -1,14 +1,29 @@
+import inspect
 import os
+import sys
+import pysenpai.callbacks.defaults as defaults
 from pysenpai.checking.testcase import FunctionTestCase
+from pysenpai.exceptions import NoAdditionalInfo, NotCallable, OutputParseError
 from pysenpai.messages import load_messages, Codes
 from pysenpai.output import json_output, output
-from pysenpai_c.utils.internal import freopen
+from pysenpai_c.utils.internal import freopen, input_to_file
 
 
 class CFunctionTestCase(FunctionTestCase):
 
-    pass
+    def wrap(self, module, target):
+        st_func = getattr(module, target)
+        #if not inspect.isfunction(st_func):
+        #    raise NotCallable(name=target)
+        return st_func(*self.args)
 
+    def set_input_fn(self, fn):
+        self._input_fn = fn
+
+    def teardown(self):
+        if hasattr(self, "_input_fn"):
+            os.remove(self._input_fn)
+        os.remove("output")
 
 
 def run_c_cases(category, test_target, st_module, test_cases, lang,
@@ -18,7 +33,6 @@ def run_c_cases(category, test_target, st_module, test_cases, lang,
                 hide_output=True,
                 test_recurrence=True,
                 validate_exception=False,
-                argument_cloner=defaults.default_argument_cloner,
                 new_test=defaults.default_new_test,
                 grader=defaults.pass_fail_grader):
 
@@ -33,15 +47,19 @@ def run_c_cases(category, test_target, st_module, test_cases, lang,
     prev_res = None
     prev_out = None
 
+    if inspect.isfunction(test_cases):
+        test_cases = test_cases()
+
     for i, test in enumerate(test_cases):
         json_output.new_run()
         freopen("output", "w", sys.stdout)
 
-        try:
+        if test.inputs:
             inps = test.inputs
             fn = input_to_file("\n".join([str(x) for x in inps]))
             freopen(fn, "r", sys.stdin)
-        except IndexError:
+            test.set_input_fn(fn)
+        else:
             inps = []
 
         if test.args:
@@ -65,7 +83,7 @@ def run_c_cases(category, test_target, st_module, test_cases, lang,
         try:
             res = test.wrap(st_module, test_target)
         except NotCallable as e:
-            sys.stdout = save
+            os.dup2(orig_stdout.fileno(), sys.stdout.fileno())
             output(msgs.get_msg("IsNotFunction", lang), Codes.ERROR, name=e.callable_name)
             return 0
         except BaseException as e:
@@ -76,13 +94,9 @@ def run_c_cases(category, test_target, st_module, test_cases, lang,
                 etype, evalue, etrace = sys.exc_info()
                 ename = evalue.__class__.__name__
                 emsg = str(evalue)
-                elineno, eline = get_exception_line(st_module, etrace)
                 output(msgs.get_msg(ename, lang, default="GenericErrorMsg"), Codes.ERROR,
                     emsg=emsg,
                     ename=ename
-                )
-                output(msgs.get_msg("PrintExcLine", lang), Codes.DEBUG,
-                    lineno=elineno, line=eline
                 )
                 test.teardown()
                 continue
@@ -94,7 +108,7 @@ def run_c_cases(category, test_target, st_module, test_cases, lang,
             with open("output", "r") as f:
                 out_content = f.read()
         except UnicodeDecodeError:
-            output(msgs.get_msg("OutputEncodingError", lang), ERROR)
+            output(msgs.get_msg("OutputEncodingError", lang), Codes.ERROR)
             return
 
         if not hide_output:
