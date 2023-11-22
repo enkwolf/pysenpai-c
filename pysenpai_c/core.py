@@ -4,7 +4,7 @@ import sys
 import cffi
 from pysenpai.messages import load_messages, Codes
 from pysenpai.output import json_output, output
-from pysenpai_c.utils.internal import find_prototypes
+from pysenpai_c.utils.internal import find_prototypes, freopen
 
 
 ffi = cffi.FFI()
