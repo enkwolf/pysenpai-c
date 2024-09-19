@@ -13,7 +13,13 @@ ffi = cffi.FFI()
 
 
 
-def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_stdio=False):
+def load_with_verify(st_c_filename,
+                     lang="en",
+                     custom_msgs={},
+                     typedefs={},
+                     req_stdio=False,
+                     show_source=False):
+
     lib_name, ext = os.path.splitext(st_c_filename)
     msgs = load_messages(lang, "c_load", "pysenpai_c")
     msgs.update(custom_msgs)
@@ -53,11 +59,15 @@ def load_with_verify(st_c_filename, lang="en", custom_msgs={}, typedefs={}, req_
     freopen("err", "w", sys.stderr)
 
     with open(st_c_filename) as source:
+        contents = source.read()
+        if show_source:
+            output(msgs.get_msg("ShowSource", lang), Codes.INFO, source=contents)
+
         try:
-            st_lib = ffi.verify(source.read())
-        except:
+            st_lib = ffi.verify(contents, tmpdir="./__pycache__")
+        except Exception as e:
             os.dup2(orig_stderr.fileno(), sys.stderr.fileno())
-            output(msgs.get_msg("CompileError", lang), Codes.ERROR)
+            output(msgs.get_msg("CompileError", lang), Codes.ERROR, emsg=e)
             with open("err", "r") as f:
                 print(f.read())
             return None

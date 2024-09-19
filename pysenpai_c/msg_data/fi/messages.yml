@@ -11,8 +11,14 @@ c_load:
     Ladataan kooditiedosto {name} kirjastona testattavaksi...
   CompileError: |-
     Kooditiedostoa ei voitu kääntää.
+    Lisätietoja: {emsg}
   EncodingError: |-
     Kooditiedostoa ei voitu lukea UTF-8 koodauksella.
   InvalidPrototype: |-
     Yksi tai useampi funktion prototyyppi sisälsi virheitä. Tarkistinjärjestelmä asettaa prototyypeille joitain rajoituksia.
+  ShowSource: |-
+    Testattu lähdekoodi:
+    {{{{{{highlight=c
+    {source}
+    }}}}}}
 
