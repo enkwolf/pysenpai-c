@@ -67,9 +67,9 @@ def load_with_verify(st_c_filename,
             st_lib = ffi.verify(contents, tmpdir="./__pycache__")
         except Exception as e:
             os.dup2(orig_stderr.fileno(), sys.stderr.fileno())
-            output(msgs.get_msg("CompileError", lang), Codes.ERROR, emsg=e)
             with open("err", "r") as f:
-                print(f.read())
+                err_content = f.read()
+            output(msgs.get_msg("CompileError", lang), Codes.ERROR, emsg=e, c_err=err_content)
             return None
 
     os.dup2(orig_stderr.fileno(), sys.stderr.fileno())

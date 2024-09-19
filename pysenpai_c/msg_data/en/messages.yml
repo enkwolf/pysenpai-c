@@ -12,6 +12,10 @@ c_load:
   CompileError: |-
     Unable to compile the source file.
     Information: {emsg}
+    Compiler errors:
+    {{{{{{
+    {c_err}
+    }}}}}}
   EncodingError: |-
     Unable to read the code file as UTF-8.
   InvalidPrototype: |-

@@ -12,6 +12,10 @@ c_load:
   CompileError: |-
     Kooditiedostoa ei voitu kääntää.
     Lisätietoja: {emsg}
+    Kääntäjän virheraportti:
+    {{{{{{
+    {c_err}
+    }}}}}}
   EncodingError: |-
     Kooditiedostoa ei voitu lukea UTF-8 koodauksella.
   InvalidPrototype: |-
